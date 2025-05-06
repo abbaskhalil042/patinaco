@@ -19,9 +19,9 @@ export default function EditProductPage() {
     });
   }, [id]);
   return (
-    <Layout>
+    <div className="container mx-auto p-4">
       <h1>Edit product</h1>
       {productInfo && <ProductForm {...productInfo} />}
-    </Layout>
+    </div>
   );
 }
