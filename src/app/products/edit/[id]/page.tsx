@@ -1,5 +1,5 @@
 "use client";
-import { useRouter } from "next/router";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ProductForm, { ProductFormProps } from "@/app/components/ProductForm";
@@ -8,7 +8,8 @@ import Layout from "@/app/components/Layout";
 export default function EditProductPage() {
   const [productInfo, setProductInfo] = useState<ProductFormProps>({});
   const router = useRouter();
-  const { id } = router.query;
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   useEffect(() => {
     if (!id) {
       return;

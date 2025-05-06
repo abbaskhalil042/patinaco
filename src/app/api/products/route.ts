@@ -11,7 +11,7 @@ interface ProductRequestBody {
   title: string;
   description: string;
   price: number;
-  image: string[];
+  image: string[] | string;
   category?: Category | string;
   properties?: Record<string, string>;
 }
@@ -22,13 +22,13 @@ export async function POST(request: Request) {
   try {
     connectDB();
     const body: ProductRequestBody = await request.json();
-    const { title, description, price, images, category, properties } = body;
+    const { title, description, price, image, category, properties } = body;
 
     const product = await Product.create({
       name: title, // Change title to name to match schema
       description,
       price,
-      images, // Fixed variable name from image to images
+      image, // Fixed variable name from image to images
       category,
       properties,
     });
@@ -47,47 +47,21 @@ export async function POST(request: Request) {
 }
 
 //*get all products
-// export async function GET(request: Request) {
-//   try {
-//     connectDB();
-//     const products = await Product.find({});
-//     return NextResponse.json(products, { status: 200 });
-//   } catch (error) {
-//     console.log(error);
-//     return NextResponse.json(
-//       { error: "Failed to fetch products" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-//*get single product
-export async function GET(request: Request, { params }: any) {
+export async function GET(request: Request) {
   try {
     connectDB();
-    // const { searchParams } = new URL(request.url);
-    // const id = searchParams.get("id");
-    const { id } = params;
-    console.log("id", id);
-    if (!id) {
-      return NextResponse.json(
-        { error: "Product ID is required" },
-        { status: 400 }
-      );
-    }
-    const product = await Product.findById(id);
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
-    }
-    return NextResponse.json(product, { status: 200 });
+    const products = await Product.find({});
+    return NextResponse.json(products, { status: 200 });
   } catch (error) {
     console.log(error);
     return NextResponse.json(
-      { error: "Failed to fetch product" },
+      { error: "Failed to fetch products" },
       { status: 500 }
     );
   }
 }
+
+
 //*update product
 export async function PUT(request: Request, { params }: any) {
   try {
