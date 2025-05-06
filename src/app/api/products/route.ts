@@ -7,6 +7,7 @@ interface ProductRequestBody {
   description: string;
   price: number;
   image: string[];
+  category: string;
 }
 
 //*create post
@@ -14,12 +15,13 @@ export default async function POST(request: Request) {
   try {
     connectDB();
     const body: ProductRequestBody = await request.json();
-    const { name, description, price, image } = body;
+    const { name, description, price, image,category } = body;
     const product = await Product.create({
       name,
       description,
       price,
       images: image,
+      category,
     });
     return NextResponse.json(
       { message: "Product created successfully", product },
@@ -33,3 +35,5 @@ export default async function POST(request: Request) {
     );
   }
 }
+
+

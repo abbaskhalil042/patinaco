@@ -7,7 +7,7 @@ import Logo from "./Logo";
 
 export default function Sidebar({ show }: { show: boolean }) {
   const inactiveLink = "flex gap-1 p-1";
-  const activeLink = inactiveLink + " bg-highlight text-black rounded-sm";
+  const activeLink = inactiveLink + " bg-[#eae8fb] text-black rounded-sm";
   const inactiveIcon = "w-6 h-6";
   const activeIcon = inactiveIcon + " text-[#5542F6]";
   const pathname = usePathname();
@@ -19,7 +19,7 @@ export default function Sidebar({ show }: { show: boolean }) {
     <aside
       className={
         (show ? "left-0" : "-left-full") +
-        " top-0 text-gray-500 p-4 fixed w-full bg-bgGray h-full md:static md:w-auto transition-all"
+        " top-0 text-gray-500 p-4 fixed w-full bg-bgGray md:static md:w-auto transition-all border-r h-screen border-blue-900 "
       }
     >
       <div className="mb-4 mr-4">

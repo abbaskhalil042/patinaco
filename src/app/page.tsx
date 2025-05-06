@@ -19,7 +19,7 @@ const Home = () => {
     {/* Right Section */}
     <div className="flex items-center gap-2 bg-gray-300   rounded-lg text-black">
       <Image
-        src={session?.user?.image}
+        src={session?.user?.image as string}
         alt="User Avatar"
         width={32}
         height={32}
