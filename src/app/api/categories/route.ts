@@ -2,17 +2,17 @@ import { NextResponse } from "next/server";
 import { Category } from "../../../../models/category";
 
 type ParentCategory = {
-  _id: string;
+  id: string;
 };
 
 type Body = {
   name: string;
   parent?: ParentCategory; // Optional if parent is not always provided
 };
-export  async function POST(request: Request) {
+export async function POST(request: Request) {
   try {
     const body: Body = await request.json();
-    const { name, parent } = body
+    const { name, parent } = body;
 
     const category = await Category.create({
       name,

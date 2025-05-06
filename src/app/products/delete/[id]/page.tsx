@@ -1,109 +1,113 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Layout from "@/app/components/Layout";
+import Spinner from "@/app/components/Spinner";
 
 interface ProductInfo {
   _id: string;
   title: string;
-  // Add other product properties as needed
 }
 
-export default function DeleteProductPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function DeleteProductPage() {
   const router = useRouter();
-  const id = params.id;
-  console.log("id", id);
+  const params = useParams();
+  const id = params.id; // Remove the optional chaining (?.)
 
   const [productInfo, setProductInfo] = useState<ProductInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
       setError("No product ID provided");
-      return;
-    }
-    // Validate the ID format if needed
-    if (!/^[0-9a-fA-F]{24}$/.test(id)) {
-      setError("Invalid product ID format");
+      setIsLoading(false);
+      router.push("/products");
       return;
     }
 
-    axios
-      .get(`/api/products/${id}`)
-      .then((response) => {
+    const fetchProduct = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`/api/products/${id}`);
+        
         if (!response.data) {
           setError("Product not found");
           return;
         }
-        console.log("response", response.data);
+        
         setProductInfo(response.data);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error fetching product:", err);
         setError("Failed to load product details");
-      });
-  }, [id]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, router]);
 
   async function deleteProduct() {
-    if (!id) {
-      setError("No product ID available for deletion");
-      return;
-    }
-
     try {
+      setIsLoading(true);
       await axios.delete(`/api/products/${id}`);
-      console.log("Product deleted successfully!");
-      goBack();
+      router.push("/products");
     } catch (err) {
       console.error("Error deleting product:", err);
       setError("Failed to delete product");
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  function goBack() {
-    router.push("/products");
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <>
-        <h1>{id}</h1>
-        <div className="text-center text-red-500">{error}</div>
-        <div className="flex justify-center mt-4">
-          <button className="btn-default cursor-pointer" onClick={goBack}>
-            Back to Products
-          </button>
-        </div>
-      </>
+      <div className="text-center p-4">
+        <h1 className="text-red-500">{error}</h1>
+        <button 
+          className="btn-default mt-4"
+          onClick={() => router.push("/products")}
+        >
+          Back to Products
+        </button>
+      </div>
     );
   }
 
   if (!productInfo) {
-    return (
-      <>
-        <div className="text-center">Loading product details...</div>
-      </>
-    );
+    return <div className="text-center p-4">Loading product details...</div>;
   }
 
   return (
-    <>
-      <h1 className="text-center">
-        Do you really want to delete &nbsp;&quot;{productInfo.title}&quot;?
+    <div className="text-center p-4">
+      <h1 className="text-xl mb-4">
+        Do you really want to delete &quot;{productInfo.title}&quot;?
       </h1>
-      <div className="flex gap-2 justify-center mt-4">
-        <button onClick={deleteProduct} className="btn-red cursor-pointer">
-          Yes
+      <div className="flex gap-4 justify-center">
+        <button 
+          onClick={deleteProduct} 
+          className="btn-red"
+          disabled={isLoading}
+        >
+          {isLoading ? "Deleting..." : "Yes, Delete"}
         </button>
-        <button className="btn-default cursor-pointer" onClick={goBack}>
-          NO
+        <button 
+          className="btn-default" 
+          onClick={() => router.push("/products")}
+          disabled={isLoading}
+        >
+          Cancel
         </button>
       </div>
-    </>
+    </div>
   );
 }

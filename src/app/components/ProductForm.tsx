@@ -22,11 +22,11 @@ type Property = {
 };
 
 type Category = {
-  _id: string;
+_id: string;
   name: string;
   properties: Property[];
   parent?: {
-    _id: string;
+    id: string;
   };
 };
 
@@ -35,7 +35,7 @@ interface CategoryResponse {
   name: string;
   properties: Property[];
   parent?: {
-    _id: string;
+    id: string;
   };
 }
 
@@ -112,6 +112,7 @@ export default function ProductForm({
         ...oldImages,
         ...(res.data.links || [res.data.url]),
       ]);
+      console.log("Uploaded images:", res.data.links || [res.data.url]);
       setIsUploading(false);
     }
   }
@@ -135,9 +136,9 @@ export default function ProductForm({
       }
 
       // Check parent categories
-      while (catInfo?.parent?._id) {
+      while (catInfo?.parent?.id) {
         const parentCat = categories.find(
-          ({ _id }) => _id === catInfo?.parent?._id
+          ({ _id }) => _id === catInfo?.parent?.id
         );
         if (parentCat) {
           // Add parent properties if they exist
@@ -196,8 +197,10 @@ export default function ProductForm({
       <label>Photos</label>
       <div className="mb-2 flex flex-wrap gap-1">
         <ReactSortable
-          list={images}
-          setList={updateImagesOrder}
+          list={images.map((img, index) => ({ id: index, name: img }))}
+          setList={(newState) =>
+            updateImagesOrder(newState.map((item) => item.name))
+          }
           className="flex flex-wrap gap-1"
         >
           {images
@@ -256,7 +259,7 @@ export default function ProductForm({
         placeholder="price"
         value={price!}
         onChange={(ev: React.ChangeEvent<HTMLInputElement>) =>
-          setPrice(parseInt(ev.target.value) || 0)
+          setPrice(parseInt(ev.target.value) || null)
         }
       />
       <button type="submit" className="btn-primary cursor-pointer">

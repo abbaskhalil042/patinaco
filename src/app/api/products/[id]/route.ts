@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "../../../../../lib/db";
 import { Product } from "../../../../../models/product";
 import mongoose from "mongoose";
@@ -11,51 +11,60 @@ interface ProductRequestBody {
   category: string;
   properties?: Record<string, any>;
 }
-//*get single product
+
+function isValidId(id: string): boolean {
+  return mongoose.Types.ObjectId.isValid(id);
+}
+
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = params; // Get ID from route parameter
+    
+    // Proper way to access params in Next.js 13+
+    const id = params?.id;
 
-    if (!id) {
+    console.log("[API] GET Product ID:", id);
+
+    if (!id || !isValidId(id)) {
+      console.log("Invalid ID format:", id);
       return NextResponse.json(
-        { error: "Product ID is required" },
+        { error: "Invalid product ID format" },
         { status: 400 }
       );
     }
 
     const product = await Product.findById(id);
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
     }
+
     return NextResponse.json(product, { status: 200 });
   } catch (error) {
-    console.log(error);
+    console.error("GET Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch product" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
 
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
+    const id = params?.id;
 
-    // Correct way to extract id from params (remove await)
-    const { id } = params;
-
-    console.log("ID from params:", id);
-
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    if (!id || !isValidId(id)) {
       return NextResponse.json(
-        { error: "Valid product ID is required" },
+        { error: "Invalid product ID" },
         { status: 400 }
       );
     }
@@ -63,7 +72,6 @@ export async function PUT(
     const body: ProductRequestBody = await request.json();
     const { title, description, price, images, category, properties } = body;
 
-    // Validate required fields
     if (!title || !price) {
       return NextResponse.json(
         { error: "Title and price are required" },
@@ -81,11 +89,14 @@ export async function PUT(
         category,
         properties,
       },
-      { new: true, runValidators: true } // Added runValidators
+      { new: true, runValidators: true }
     );
 
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
@@ -93,7 +104,7 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Update error:", error);
+    console.error("PUT Error:", error);
     return NextResponse.json(
       { error: "Failed to update product" },
       { status: 500 }
@@ -101,26 +112,27 @@ export async function PUT(
   }
 }
 
-// DELETE - Remove product
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = params;
+    const id = params?.id;
 
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    if (!id || !isValidId(id)) {
       return NextResponse.json(
-        { error: "Valid product ID is required" },
+        { error: "Invalid product ID" },
         { status: 400 }
       );
     }
 
     const product = await Product.findByIdAndDelete(id);
-
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
@@ -128,7 +140,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error("DELETE Error:", error);
     return NextResponse.json(
       { error: "Failed to delete product" },
       { status: 500 }

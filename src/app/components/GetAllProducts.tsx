@@ -82,8 +82,8 @@ export default function GetAllProducts() {
               <tr key={product._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex space-x-2">
-                    {product?.images?.length > 0 ? (
-                      product?.images.slice(0, 3).map((image, index) => (
+                    {(product.images ?? []).length > 0 ? (
+                      (product.images ?? []).slice(0, 3).map((image, index) => (
                         <div
                           key={index}
                           className="h-12 w-12 rounded-md overflow-hidden border"
@@ -100,9 +100,9 @@ export default function GetAllProducts() {
                         No Image
                       </div>
                     )}
-                    {product.images?.length > 3 && (
+                    {(product.images?.length ?? 0) > 3 && (
                       <div className="h-12 w-12 rounded-md border flex items-center justify-center bg-gray-100 text-gray-500 text-xs">
-                        +{product.images.length - 3}
+                        +{(product.images?.length ?? 0) - 3}
                       </div>
                     )}
                   </div>
@@ -131,8 +131,8 @@ export default function GetAllProducts() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex space-x-2">
                     <Link
-                      href={`/products/edit/${product._id}`}
-                      className= "btn-default flex items-center gap-1"
+                      href={`/products/edit/${product?._id}`}
+                      className="btn-default flex items-center gap-1"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -151,7 +151,7 @@ export default function GetAllProducts() {
                       Edit
                     </Link>
                     <Link
-                      href={`/products/delete/${product._id}`}
+                      href={`/products/delete/${product?._id}`}
                       className="btn-red flex items-center gap-1"
                     >
                       <svg

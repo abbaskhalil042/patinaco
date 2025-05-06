@@ -11,7 +11,7 @@ import { isAdminRequest } from "../auth/[...nextauth]/route";
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    accessKeyId: process.env.AWS_ACCESS_KEYid!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
 });
@@ -25,7 +25,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
-    
 
     // Decode the base64 string into a buffer (if needed)
     const buffer = Buffer.from(await file.arrayBuffer()); // Get the buffer from the file
@@ -42,13 +41,13 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
     // Upload file to S3
     const command = new PutObjectCommand(uploadParams);
+    console.log("Command:", command);
     const data = await s3Client.send(command);
 
     // Return the URL of the uploaded file
     const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
     console.log("File uploaded successfully:", data);
     console.log("File URL:", fileUrl);
-
 
     return NextResponse.json({
       message: "File uploaded successfully",

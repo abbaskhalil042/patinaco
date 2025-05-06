@@ -10,10 +10,10 @@ interface Property {
 }
 
 interface Category {
-  _id: string;
+  id: string;
   name: string;
   parent?: {
-    _id: string;
+    id: string;
     name: string;
   };
   properties: { name: string; values: string[] }[];
@@ -54,7 +54,7 @@ function Category({ swal }: CategoriesProps) {
     };
 
     if (editedCategory) {
-      data._id = editedCategory._id;
+      data.id = editedCategory.id;
       await axios.put("/api/categories", data);
       setEditedCategory(null);
     } else {
@@ -71,7 +71,7 @@ function Category({ swal }: CategoriesProps) {
   function editCategory(category: Category) {
     setEditedCategory(category);
     setName(category.name);
-    setParentCategory(category.parent?._id || "");
+    setParentCategory(category.parent?.id || "");
     setProperties(
       category.properties.map(({ name, values }) => ({
         name,
@@ -93,7 +93,7 @@ function Category({ swal }: CategoriesProps) {
       })
       .then(async (result) => {
         if (result.isConfirmed) {
-          await axios.delete("/api/categories?_id=" + category._id);
+          await axios.delete("/api/categories?id=" + category.id);
           fetchCategories();
         }
       });
@@ -145,7 +145,7 @@ function Category({ swal }: CategoriesProps) {
           >
             <option value="">No parent category</option>
             {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
+              <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
@@ -225,7 +225,7 @@ function Category({ swal }: CategoriesProps) {
           </thead>
           <tbody>
             {categories.map((cat) => (
-              <tr key={cat._id}>
+              <tr key={cat.id}>
                 <td>{cat.name}</td>
                 <td>{cat.parent?.name || "—"}</td>
                 <td>
@@ -251,4 +251,4 @@ function Category({ swal }: CategoriesProps) {
   );
 }
 
-export default withSwal(({ swal }:any) => <Category swal={swal} />);
+export default withSwal(({ swal }: any) => <Category swal={swal} />);

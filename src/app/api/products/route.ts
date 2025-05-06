@@ -1,18 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import connectDB from "../../../../lib/db";
 import { Product } from "../../../../models/product";
 import { isAdminRequest } from "../auth/[...nextauth]/route";
 
 interface Category {
-  _id: string;
+  id: string;
 }
 
 interface ProductRequestBody {
   title: string;
   description: string;
   price: number;
-  image: string[] | string;
+  images: string[] | string;
   category?: Category | string;
   properties?: Record<string, string>;
 }
@@ -23,13 +23,13 @@ export async function POST(request: Request) {
   try {
     connectDB();
     const body: ProductRequestBody = await request.json();
-    const { title, description, price, image, category, properties } = body;
+    const { title, description, price, images, category, properties } = body;
 
     const product = await Product.create({
       title, // Change title to name to match schema
       description,
       price,
-      image, // Fixed variable name from image to images
+      images, // Fixed variable name from image to images
       category,
       properties,
     });
@@ -48,9 +48,16 @@ export async function POST(request: Request) {
 }
 
 //*get all products
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> },
+) {
   try {
     connectDB();
+    // const { slug } = await params;
+    // const id = slug as string;
+    console.log("###########################################################", params);
+    console.log("Request URL:", request.url);
     const products = await Product.find({});
     return NextResponse.json(products, { status: 200 });
   } catch (error) {
