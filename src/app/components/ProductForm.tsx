@@ -10,7 +10,7 @@ export interface ProductFormProps {
   _id?: string;
   title?: string;
   description?: string;
-  price?: string;
+  price?: number;
   images?: string[] | string; // Allow both string and string[] types
   category?: string;
   properties?: Record<string, string>;
@@ -54,11 +54,13 @@ export default function ProductForm({
   const [productProperties, setProductProperties] = useState<
     Record<string, string>
   >(assignedProperties || {});
-  const [price, setPrice] = useState(existingPrice || "");
+  const [price, setPrice] = useState(existingPrice || null);
   const [images, setImages] = useState<string[]>(
-    Array.isArray(existingImages) 
-      ? existingImages 
-      : (existingImages ? existingImages.split(",") : [])
+    Array.isArray(existingImages)
+      ? existingImages
+      : existingImages
+      ? existingImages.split(",")
+      : []
   );
   const [goToProducts, setGoToProducts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -78,12 +80,14 @@ export default function ProductForm({
       title,
       description,
       price,
-      images: images.filter(img => img.trim() !== ""), // Remove empty strings and send as array
+      images: images.filter((img) => img.trim() !== ""),
       category,
       properties: productProperties,
     };
     if (_id) {
-      await axios.put("/api/products", { ...data, _id });
+      await axios.put("/api/products/" + _id, { ...data });
+
+      // console.log("Updated product:", response?.data);
     } else {
       await axios.post("/api/products", data);
     }
@@ -104,12 +108,15 @@ export default function ProductForm({
         data.append("file", file);
       }
       const res = await axios.post("/api/upload", data);
-      setImages((oldImages) => [...oldImages, ...res.data.links || [res.data.url]]);
+      setImages((oldImages) => [
+        ...oldImages,
+        ...(res.data.links || [res.data.url]),
+      ]);
       setIsUploading(false);
     }
   }
 
-  function updateImagesOrder(images: string[]) {
+  function updateImagesOrder(images: string[]): void {
     setImages(images);
   }
 
@@ -120,13 +127,13 @@ export default function ProductForm({
 
   if (categories.length > 0 && category) {
     let catInfo = categories.find(({ _id }) => _id === category);
-  
+
     if (catInfo) {
       // Add current category properties if they exist
       if (catInfo.properties && Array.isArray(catInfo.properties)) {
         propertiesToFill.push(...catInfo.properties);
       }
-  
+
       // Check parent categories
       while (catInfo?.parent?._id) {
         const parentCat = categories.find(
@@ -193,18 +200,20 @@ export default function ProductForm({
           setList={updateImagesOrder}
           className="flex flex-wrap gap-1"
         >
-          {images.filter(img => img.trim() !== "").map((link, i) => (
-            <div
-              key={i}
-              className="h-24 bg-white p-1 shadow-sm rounded-sm border border-gray-200"
-            >
-              <img
-                src={link}
-                alt={`Uploaded ${i}`}
-                className="rounded-lg max-h-full object-contain"
-              />
-            </div>
-          ))}
+          {images
+            .filter((img) => img.trim() !== "")
+            .map((link, i) => (
+              <div
+                key={i}
+                className="h-24 bg-white p-1 shadow-sm rounded-sm border border-gray-200"
+              >
+                <img
+                  src={link}
+                  alt={`Uploaded ${i}`}
+                  className="rounded-lg max-h-full object-contain"
+                />
+              </div>
+            ))}
         </ReactSortable>
 
         {isUploading && (
@@ -245,8 +254,10 @@ export default function ProductForm({
         type="number"
         className="focus:ring-2 focus:ring-blue-900 focus:border-transparent border-blue-900 rounded-md shadow-sm"
         placeholder="price"
-        value={price}
-        onChange={(ev) => setPrice(ev.target.value)}
+        value={price!}
+        onChange={(ev: React.ChangeEvent<HTMLInputElement>) =>
+          setPrice(parseInt(ev.target.value) || 0)
+        }
       />
       <button type="submit" className="btn-primary cursor-pointer">
         Save

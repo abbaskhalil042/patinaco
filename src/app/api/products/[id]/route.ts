@@ -7,7 +7,7 @@ interface ProductRequestBody {
   title: string;
   description: string;
   price: number;
-  image: string[];
+  images: string[];
   category: string;
   properties?: Record<string, any>;
 }
@@ -47,7 +47,11 @@ export async function PUT(
 ) {
   try {
     await connectDB();
+
+    // Correct way to extract id from params (remove await)
     const { id } = params;
+
+    console.log("ID from params:", id);
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -57,10 +61,27 @@ export async function PUT(
     }
 
     const body: ProductRequestBody = await request.json();
+    const { title, description, price, images, category, properties } = body;
+
+    // Validate required fields
+    if (!title || !price) {
+      return NextResponse.json(
+        { error: "Title and price are required" },
+        { status: 400 }
+      );
+    }
+
     const product = await Product.findByIdAndUpdate(
       id,
-      { ...body, images: body.image }, // Assuming you want to map 'image' to 'images'
-      { new: true }
+      {
+        title,
+        description,
+        price,
+        images,
+        category,
+        properties,
+      },
+      { new: true, runValidators: true } // Added runValidators
     );
 
     if (!product) {
@@ -72,7 +93,7 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error) {
-    console.error(error);
+    console.error("Update error:", error);
     return NextResponse.json(
       { error: "Failed to update product" },
       { status: 500 }

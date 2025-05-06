@@ -56,7 +56,7 @@ export default function DeleteProductPage({
     }
 
     try {
-      await axios.delete(`/api/products?id=${id}`);
+      await axios.delete(`/api/products/${id}`);
       console.log("Product deleted successfully!");
       goBack();
     } catch (err) {
