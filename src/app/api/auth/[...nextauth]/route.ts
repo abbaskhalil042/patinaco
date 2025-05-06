@@ -14,13 +14,9 @@ export async function isAdminRequest(
   res: NextResponse
 ): Promise<void> {
   // Corrected the getServerSession usage
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(authOptions);
 
   if (!session || !adminEmails.includes(session?.user?.email as string)) {
-    res.status(401); // Set the status code to 401
-    res.end(); // End the response
     throw new Error("Not an admin");
   }
-
-  // Continue with your logic if the user is an admin...
 }

@@ -1,19 +1,42 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-
 import { ReactSortable } from "react-sortablejs";
 import Spinner from "./Spinner";
 
-interface ProductFormProps {
+export interface ProductFormProps {
   _id?: string;
   title?: string;
   description?: string;
   price?: string;
-  images?: string[];
+  images?: string[] | string; // Allow both string and string[] types
   category?: string;
   properties?: Record<string, string>;
+}
+
+type Property = {
+  name: string;
+  values: string[];
+};
+
+type Category = {
+  _id: string;
+  name: string;
+  properties: Property[];
+  parent?: {
+    _id: string;
+  };
+};
+
+interface CategoryResponse {
+  _id: string;
+  name: string;
+  properties: Property[];
+  parent?: {
+    _id: string;
+  };
 }
 
 export default function ProductForm({
@@ -28,89 +51,104 @@ export default function ProductForm({
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [category, setCategory] = useState(assignedCategory || "");
-  const [productProperties, setProductProperties] = useState(
-    assignedProperties || {}
-  );
+  const [productProperties, setProductProperties] = useState<
+    Record<string, string>
+  >(assignedProperties || {});
   const [price, setPrice] = useState(existingPrice || "");
-  const [images, setImages] = useState(existingImages || []);
+  const [images, setImages] = useState<string[]>(
+    Array.isArray(existingImages) 
+      ? existingImages 
+      : (existingImages ? existingImages.split(",") : [])
+  );
   const [goToProducts, setGoToProducts] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+
   const router = useRouter();
+
   useEffect(() => {
     axios.get("/api/categories").then((result) => {
       setCategories(result.data);
     });
   }, []);
+
   async function saveProduct(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
     const data = {
       title,
       description,
       price,
-      images,
+      images: images.filter(img => img.trim() !== ""), // Remove empty strings and send as array
       category,
       properties: productProperties,
     };
     if (_id) {
-      //update
       await axios.put("/api/products", { ...data, _id });
     } else {
-      //create
       await axios.post("/api/products", data);
     }
     setGoToProducts(true);
   }
+
   if (goToProducts) {
     router.push("/products");
   }
+
   async function uploadImages(ev: React.ChangeEvent<HTMLInputElement>) {
     const files = ev.target?.files;
-    if (!files) {
-      return;
-    }
-    if (files?.length > 0) {
+    if (!files) return;
+    if (files.length > 0) {
       setIsUploading(true);
       const data = new FormData();
       for (const file of files) {
         data.append("file", file);
       }
       const res = await axios.post("/api/upload", data);
-      setImages((oldImages) => {
-        return [...oldImages, ...res.data.links];
-      });
+      setImages((oldImages) => [...oldImages, ...res.data.links || [res.data.url]]);
       setIsUploading(false);
     }
   }
+
   function updateImagesOrder(images: string[]) {
     setImages(images);
   }
-  function setProductProp(propName, value) {
-    setProductProperties((prev) => {
-      const newProductProps = { ...prev };
-      newProductProps[propName] = value;
-      return newProductProps;
-    });
-  }
 
-  const propertiesToFill = [];
+  function setProductProp(propName: string, value: string) {
+    setProductProperties((prev) => ({ ...prev, [propName]: value }));
+  }
+  const propertiesToFill: Property[] = [];
+
   if (categories.length > 0 && category) {
     let catInfo = categories.find(({ _id }) => _id === category);
-    propertiesToFill.push(...catInfo.properties);
-    while (catInfo?.parent?._id) {
-      const parentCat = categories.find(
-        ({ _id }) => _id === catInfo?.parent?._id
-      );
-      propertiesToFill.push(...parentCat.properties);
-      catInfo = parentCat;
+  
+    if (catInfo) {
+      // Add current category properties if they exist
+      if (catInfo.properties && Array.isArray(catInfo.properties)) {
+        propertiesToFill.push(...catInfo.properties);
+      }
+  
+      // Check parent categories
+      while (catInfo?.parent?._id) {
+        const parentCat = categories.find(
+          ({ _id }) => _id === catInfo?.parent?._id
+        );
+        if (parentCat) {
+          // Add parent properties if they exist
+          if (parentCat.properties && Array.isArray(parentCat.properties)) {
+            propertiesToFill.push(...parentCat.properties);
+          }
+          catInfo = parentCat;
+        } else {
+          break;
+        }
+      }
     }
   }
-
   return (
     <form onSubmit={saveProduct}>
       <label>Product name</label>
       <input
-        className=" focus:ring-2 focus:ring-blue-900 focus:border-transparent border-blue-900 rounded-md shadow-sm"
+        className="focus:ring-2 focus:ring-blue-900 focus:border-transparent border-blue-900 rounded-md shadow-sm"
         type="text"
         placeholder="product name"
         value={title}
@@ -118,58 +156,63 @@ export default function ProductForm({
       />
       <label>Category</label>
       <select
-        className=" focus:ring-1 focus:ring-blue-900 border-blue-900 rounded-md shadow-sm"
+        className="focus:ring-1 focus:ring-blue-900 border-blue-900 rounded-md shadow-sm"
         value={category}
         onChange={(ev) => setCategory(ev.target.value)}
       >
         <option value="">Uncategorized</option>
-        {categories.length > 0 &&
-          categories.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name}
-            </option>
-          ))}
-      </select>
-      {propertiesToFill.length > 0 &&
-        propertiesToFill.map((p) => (
-          <div key={p.name} className="">
-            <label>{p.name[0].toUpperCase() + p.name.substring(1)}</label>
-            <div>
-              <select
-                value={productProperties[p.name]}
-                onChange={(ev) => setProductProp(p.name, ev.target.value)}
-              >
-                {p.values.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+        {categories.map((c) => (
+          <option key={c._id} value={c._id}>
+            {c.name}
+          </option>
         ))}
+      </select>
+
+      {propertiesToFill.map((p, i) => (
+        <div key={i}>
+          <label>{p.name[0].toUpperCase() + p.name.substring(1)}</label>
+          <div>
+            <select
+              value={productProperties[p.name]}
+              onChange={(ev) => setProductProp(p.name, ev.target.value)}
+            >
+              {p.values.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ))}
+
       <label>Photos</label>
       <div className="mb-2 flex flex-wrap gap-1">
         <ReactSortable
           list={images}
-          className="flex flex-wrap gap-1"
           setList={updateImagesOrder}
+          className="flex flex-wrap gap-1"
         >
-          {!!images?.length &&
-            images.map((link) => (
-              <div
-                key={link}
-                className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200"
-              >
-                <img src={link} alt="" className="rounded-lg" />
-              </div>
-            ))}
+          {images.filter(img => img.trim() !== "").map((link, i) => (
+            <div
+              key={i}
+              className="h-24 bg-white p-1 shadow-sm rounded-sm border border-gray-200"
+            >
+              <img
+                src={link}
+                alt={`Uploaded ${i}`}
+                className="rounded-lg max-h-full object-contain"
+              />
+            </div>
+          ))}
         </ReactSortable>
+
         {isUploading && (
           <div className="h-24 flex items-center">
             <Spinner />
           </div>
         )}
+
         <label className="w-24 h-24 cursor-pointer text-center flex flex-col items-center justify-center text-sm gap-1 text-primary rounded-sm bg-white shadow-sm border border-primary">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -189,9 +232,10 @@ export default function ProductForm({
           <input type="file" onChange={uploadImages} className="hidden" />
         </label>
       </div>
+
       <label>Description</label>
       <textarea
-        className=" focus:ring-2 focus:ring-blue-900 border-blue-900 rounded-md shadow-sm"
+        className="focus:ring-2 focus:ring-blue-900 border-blue-900 rounded-md shadow-sm"
         placeholder="description"
         value={description}
         onChange={(ev) => setDescription(ev.target.value)}
@@ -199,12 +243,12 @@ export default function ProductForm({
       <label>Price (in USD)</label>
       <input
         type="number"
-        className=" focus:ring-2 focus:ring-blue-900 focus:border-transparent border-blue-900 rounded-md shadow-sm"
+        className="focus:ring-2 focus:ring-blue-900 focus:border-transparent border-blue-900 rounded-md shadow-sm"
         placeholder="price"
         value={price}
         onChange={(ev) => setPrice(ev.target.value)}
       />
-      <button type="submit" className="btn-primary">
+      <button type="submit" className="btn-primary cursor-pointer">
         Save
       </button>
     </form>

@@ -4,10 +4,12 @@ import { useState } from "react";
 import Logo from "./Logo";
 import Sidebar from "./Sidebar";
 import Image from "next/image";
+import { BiLoader } from "react-icons/bi";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [showNav, setShowNav] = useState(false);
   const { data: session } = useSession();
+  console.log(session);
 
   if (!session) {
     return (
@@ -15,8 +17,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="text-center w-full">
           <button
             onClick={() => signIn("google")}
-            className="bg-white p-3 px-6 rounded-lg flex items-center justify-center gap-3 mx-auto hover:bg-gray-100 transition-colors shadow-md"
+            className="bg-white p-3 px-6 rounded-lg flex items-center justify-center gap-3 mx-auto hover:bg-gray-100 transition-colors shadow-md cursor-pointer"
           >
+            {/* {session.status === "loading" && (
+              <BiLoader className="animate-spin" />
+            )} */}
+
             <Image
               src="https://developers.google.com/identity/images/g-logo.png"
               alt="Google"
