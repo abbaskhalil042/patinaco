@@ -8,7 +8,7 @@ const Home = () => {
   const { data: session } = useSession();
   console.log(session?.user);
   return (
-    <div className="text-blue-900 h-screen flex-col-rev bg-gray-100 flex items-start justify-between px-8 py-2">
+    <div className="text-blue-900 h-screen flex-col-rev bg-gray-100 flex items-start justify-between px-2 py-2">
       {/* Left Section */}
       <div>
         <h2 className="text-2xl">

@@ -4,10 +4,10 @@ export default function Logo() {
   return (
     <Link
       href="/"
-      className="flex items-center space-x-1 text-blue-900 hover:no-underline" // Added hover:no-underline for better UX
+      className="flex items-center space-x-1 text-gray-300  hover:no-underline" // Added hover:no-underline for better UX
     >
       {/* Icon circle */}
-      <div className="w-10 h-10 flex items-center justify-center bg-blue-900 rounded-full flex-shrink-0">
+      <div className="w-10 h-10 flex items-center justify-center bg-black rounded-full flex-shrink-0">
         {" "}
         {/* Added flex-shrink-0 */}
         <svg
@@ -28,7 +28,10 @@ export default function Logo() {
 
       {/* Brand Text */}
       <span className="text-2xl font-bold leading-none">
-        patina<span className="text-blue-900">Co</span>
+        Patina
+        <span className="bg-gradient-to-r from-blue-600 via-green-500 to-indigo-400 text-transparent bg-clip-text">
+          Co
+        </span>
       </span>
     </Link>
   );

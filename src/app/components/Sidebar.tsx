@@ -1,33 +1,49 @@
 "use client";
-
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import Logo from "./Logo";
+import { useState } from "react";
 
-export default function Sidebar({ show }: { show: boolean }) {
-  const inactiveLink = "flex gap-1 p-1";
-  const activeLink = inactiveLink + " bg-[#eae8fb] text-black rounded-sm";
-  const inactiveIcon = "w-6 h-6";
+export default function Sidebar({ 
+  show, 
+  setShowNav 
+}: { 
+  show: boolean; 
+  setShowNav?: (show: boolean) => void 
+}) {
+  const inactiveLink = "flex gap-2 p-2 items-center";
+  const activeLink = inactiveLink + " bg-[#eae8fb] text-black rounded-md";
+  const inactiveIcon = "w-6 h-6 text-gray-500";
   const activeIcon = inactiveIcon + " text-[#5542F6]";
+  const [isMouseDown, setIsMouseDown] = useState(false);
   const pathname = usePathname();
 
   async function logout() {
     await signOut({ callbackUrl: "/" });
   }
+
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768 && setShowNav) {
+      setShowNav(false);
+    }
+  };
+
   return (
     <aside
-      className={
-        (show ? "left-0" : "-left-full") +
-        " top-0 text-gray-500 p-4 fixed w-full bg-bgGray md:static md:w-auto transition-all border-r h-screen border-blue-900 "
-      }
+      onMouseDown={() => setIsMouseDown(true)}
+      className={`
+        ${show ? "left-0" : "-left-full"}
+        top-0 text-gray-500 p-4 fixed w-64 bg-blue-900 md:bg-[#fbfafd] md:static transition-all duration-300 h-full z-50 border-r border-gray-200
+      `}
     >
-      <div className="mb-4 mr-4">
+      <div className="mb-8">
         <Logo />
       </div>
-      <nav className="flex flex-col gap-2">
+      <nav className="flex flex-col gap-1">
         <Link
-          href={"/"}
+          href="/"
+          onClick={handleLinkClick}
           className={pathname === "/" ? activeLink : inactiveLink}
         >
           <svg
@@ -47,7 +63,8 @@ export default function Sidebar({ show }: { show: boolean }) {
           Dashboard
         </Link>
         <Link
-          href={"/products"}
+          href="/products"
+          onClick={handleLinkClick}
           className={pathname.includes("/products") ? activeLink : inactiveLink}
         >
           <svg
@@ -56,9 +73,7 @@ export default function Sidebar({ show }: { show: boolean }) {
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={
-              pathname.includes("/products") ? activeIcon : inactiveIcon
-            }
+            className={pathname.includes("/products") ? activeIcon : inactiveIcon}
           >
             <path
               strokeLinecap="round"
@@ -69,10 +84,9 @@ export default function Sidebar({ show }: { show: boolean }) {
           Products
         </Link>
         <Link
-          href={"/categories"}
-          className={
-            pathname.includes("/categories") ? activeLink : inactiveLink
-          }
+          href="/categories"
+          onClick={handleLinkClick}
+          className={pathname.includes("/categories") ? activeLink : inactiveLink}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -80,9 +94,7 @@ export default function Sidebar({ show }: { show: boolean }) {
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={
-              pathname.includes("/categories") ? activeIcon : inactiveIcon
-            }
+            className={pathname.includes("/categories") ? activeIcon : inactiveIcon}
           >
             <path
               strokeLinecap="round"
@@ -93,7 +105,8 @@ export default function Sidebar({ show }: { show: boolean }) {
           Categories
         </Link>
         <Link
-          href={"/orders"}
+          href="/orders"
+          onClick={handleLinkClick}
           className={pathname.includes("/orders") ? activeLink : inactiveLink}
         >
           <svg
@@ -113,7 +126,8 @@ export default function Sidebar({ show }: { show: boolean }) {
           Orders
         </Link>
         <Link
-          href={"/settings"}
+          href="/settings"
+          onClick={handleLinkClick}
           className={pathname.includes("/settings") ? activeLink : inactiveLink}
         >
           <svg
@@ -122,9 +136,7 @@ export default function Sidebar({ show }: { show: boolean }) {
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={
-              pathname.includes("/settings") ? activeIcon : inactiveIcon
-            }
+            className={pathname.includes("/settings") ? activeIcon : inactiveIcon}
           >
             <path
               strokeLinecap="round"
@@ -139,14 +151,17 @@ export default function Sidebar({ show }: { show: boolean }) {
           </svg>
           Settings
         </Link>
-        <button onClick={logout} className={inactiveLink}>
+        <button 
+          onClick={logout} 
+          className="flex gap-2 p-2 items-center hover:bg-gray-100 rounded-md transition-colors"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="w-6 h-6"
+            className="w-6 h-6 text-gray-500"
           >
             <path
               strokeLinecap="round"
